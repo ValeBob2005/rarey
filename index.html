@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 
-<title>Rey Cámara AR</title>
+<title>Rey AR Cámara</title>
 
 <style>
 
@@ -14,20 +14,54 @@ body{
     background:black;
 }
 
-video{
+#camera{
+
     position:fixed;
     top:0;
     left:0;
-    width:100%;
-    height:100%;
+
+    width:100vw;
+    height:100vh;
+
     object-fit:cover;
-    z-index:-1;
+
+    z-index:-2;
+
+    background:black;
+
 }
 
 canvas{
+
     position:fixed;
     top:0;
     left:0;
+
+    z-index:10;
+
+}
+
+#startButton{
+
+    position:absolute;
+
+    top:50%;
+    left:50%;
+
+    transform:translate(-50%,-50%);
+
+    padding:20px 30px;
+
+    font-size:20px;
+
+    border:none;
+
+    border-radius:12px;
+
+    background:#ffffff;
+
+    z-index:100;
+
 }
 
 </style>
@@ -35,7 +69,16 @@ canvas{
 
 <body>
 
-<video id="camera" autoplay playsinline></video>
+<video
+    id="camera"
+    autoplay
+    muted
+    playsinline>
+</video>
+
+<button id="startButton">
+INICIAR AR
+</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
@@ -44,34 +87,23 @@ canvas{
 <script>
 
 //////////////////////////////////////////////////////////
-// CAMARA REAL DEL CELULAR
+// VIDEO
 //////////////////////////////////////////////////////////
 
 const video =
     document.getElementById('camera');
 
-navigator.mediaDevices.getUserMedia({
-
-    video:{
-        facingMode:'environment'
-    }
-
-})
-
-.then(stream=>{
-
-    video.srcObject = stream;
-
-});
+const startButton =
+    document.getElementById('startButton');
 
 //////////////////////////////////////////////////////////
-// ESCENA 3D
+// ESCENA
 //////////////////////////////////////////////////////////
 
 const scene = new THREE.Scene();
 
 //////////////////////////////////////////////////////////
-// CAMARA THREEJS
+// CAMARA THREE
 //////////////////////////////////////////////////////////
 
 const camera = new THREE.PerspectiveCamera(
@@ -107,10 +139,11 @@ document.body.appendChild(
 // CONTROLES
 //////////////////////////////////////////////////////////
 
-const controls = new THREE.OrbitControls(
-    camera,
-    renderer.domElement
-);
+const controls =
+    new THREE.OrbitControls(
+        camera,
+        renderer.domElement
+    );
 
 controls.enableDamping = true;
 
@@ -118,17 +151,19 @@ controls.enableDamping = true;
 // LUCES
 //////////////////////////////////////////////////////////
 
-const ambient = new THREE.AmbientLight(
-    0xffffff,
-    1
-);
+const ambient =
+    new THREE.AmbientLight(
+        0xffffff,
+        1
+    );
 
 scene.add(ambient);
 
-const light = new THREE.DirectionalLight(
-    0xffffff,
-    1.5
-);
+const light =
+    new THREE.DirectionalLight(
+        0xffffff,
+        1.5
+    );
 
 light.position.set(10,20,10);
 
@@ -138,73 +173,79 @@ scene.add(light);
 // MATERIALES
 //////////////////////////////////////////////////////////
 
-const matBase = new THREE.MeshPhongMaterial({
+const matBase =
+    new THREE.MeshPhongMaterial({
 
-    color:0x5A96DC,
-    transparent:true,
-    opacity:0.45
+        color:0x5A96DC,
+        transparent:true,
+        opacity:0.45
 
-});
+    });
 
-const matBody = new THREE.MeshPhongMaterial({
+const matBody =
+    new THREE.MeshPhongMaterial({
 
-    color:0xA0AAB4,
-    transparent:true,
-    opacity:0.55
+        color:0xA0AAB4,
+        transparent:true,
+        opacity:0.55
 
-});
+    });
 
-const matGold = new THREE.MeshPhongMaterial({
+const matGold =
+    new THREE.MeshPhongMaterial({
 
-    color:0xFFDC78,
-    transparent:true,
-    opacity:0.55
+        color:0xFFDC78,
+        transparent:true,
+        opacity:0.55
 
-});
+    });
 
-const matCross = new THREE.MeshPhongMaterial({
+const matCross =
+    new THREE.MeshPhongMaterial({
 
-    color:0xEB7878
+        color:0xEB7878
 
-});
+    });
 
 //////////////////////////////////////////////////////////
 // BASE
 //////////////////////////////////////////////////////////
 
-const base = new THREE.Mesh(
+const base =
+    new THREE.Mesh(
 
-    new THREE.CylinderGeometry(
-        5,
-        5,
-        3,
-        64
-    ),
+        new THREE.CylinderGeometry(
+            5,
+            5,
+            3,
+            64
+        ),
 
-    matBase
+        matBase
 
-);
+    );
 
 base.position.y = 1.5;
 
 scene.add(base);
 
 //////////////////////////////////////////////////////////
-// HIPERBOLOIDE APROXIMADO
+// CUERPO
 //////////////////////////////////////////////////////////
 
-const body = new THREE.Mesh(
+const body =
+    new THREE.Mesh(
 
-    new THREE.CylinderGeometry(
-        2.6,
-        1.5,
-        8,
-        64
-    ),
+        new THREE.CylinderGeometry(
+            2.6,
+            1.5,
+            8,
+            64
+        ),
 
-    matBody
+        matBody
 
-);
+    );
 
 body.position.y = 7;
 
@@ -214,20 +255,22 @@ scene.add(body);
 // COLLAR
 //////////////////////////////////////////////////////////
 
-const collar = new THREE.Mesh(
+const collar =
+    new THREE.Mesh(
 
-    new THREE.TorusGeometry(
-        2.2,
-        0.3,
-        32,
-        100
-    ),
+        new THREE.TorusGeometry(
+            2.2,
+            0.3,
+            32,
+            100
+        ),
 
-    matGold
+        matGold
 
-);
+    );
 
-collar.rotation.x = Math.PI/2;
+collar.rotation.x =
+    Math.PI/2;
 
 collar.position.y = 11.3;
 
@@ -237,17 +280,18 @@ scene.add(collar);
 // CORONA
 //////////////////////////////////////////////////////////
 
-const crown = new THREE.Mesh(
+const crown =
+    new THREE.Mesh(
 
-    new THREE.ConeGeometry(
-        3,
-        5,
-        64
-    ),
+        new THREE.ConeGeometry(
+            3,
+            5,
+            64
+        ),
 
-    matGold
+        matGold
 
-);
+    );
 
 crown.position.y = 15;
 
@@ -257,65 +301,59 @@ scene.add(crown);
 // CRUZ
 //////////////////////////////////////////////////////////
 
-const crossV = new THREE.Mesh(
+const crossV =
+    new THREE.Mesh(
 
-    new THREE.BoxGeometry(
-        0.6,
-        2.5,
-        0.6
-    ),
+        new THREE.BoxGeometry(
+            0.6,
+            2.5,
+            0.6
+        ),
 
-    matCross
+        matCross
 
-);
+    );
 
 crossV.position.y = 18.5;
 
 scene.add(crossV);
 
-const crossH = new THREE.Mesh(
+const crossH =
+    new THREE.Mesh(
 
-    new THREE.BoxGeometry(
-        2,
-        0.6,
-        0.6
-    ),
+        new THREE.BoxGeometry(
+            2,
+            0.6,
+            0.6
+        ),
 
-    matCross
+        matCross
 
-);
+    );
 
 crossH.position.y = 18.5;
 
 scene.add(crossH);
 
 //////////////////////////////////////////////////////////
-// CAMPO VECTORIAL REAL
+// CAMPO VECTORIAL
 //////////////////////////////////////////////////////////
 
 function addVector(
-    x,
-    y,
-    z,
-    u,
-    v,
-    w
+    x,y,z,
+    u,v,w
 ){
 
     const dir =
         new THREE.Vector3(
-            u,
-            v,
-            w
+            u,v,w
         );
 
     dir.normalize();
 
     const origin =
         new THREE.Vector3(
-            x,
-            y,
-            z
+            x,y,z
         );
 
     const arrow =
@@ -332,10 +370,6 @@ function addVector(
 
 }
 
-//////////////////////////////////////////////////////////
-// GENERAR CAMPO
-//////////////////////////////////////////////////////////
-
 for(let x=-6;x<=6;x+=3){
 
     for(let y=-6;y<=6;y+=3){
@@ -349,7 +383,7 @@ for(let x=-6;x<=6;x+=3){
             let w = x - y*y;
 
             let mag = Math.sqrt(
-                u*u + v*v + w*w
+                u*u+v*v+w*w
             );
 
             u /= mag;
@@ -370,6 +404,50 @@ for(let x=-6;x<=6;x+=3){
     }
 
 }
+
+//////////////////////////////////////////////////////////
+// INICIAR CAMARA
+//////////////////////////////////////////////////////////
+
+startButton.onclick = async ()=>{
+
+    try{
+
+        const stream =
+            await navigator
+            .mediaDevices
+            .getUserMedia({
+
+                video:{
+                    facingMode:{
+                        ideal:'environment'
+                    }
+                },
+
+                audio:false
+
+            });
+
+        video.srcObject = stream;
+
+        await video.play();
+
+        startButton.style.display =
+            'none';
+
+    }
+
+    catch(error){
+
+        alert(
+            'No se pudo abrir la cámara'
+        );
+
+        console.error(error);
+
+    }
+
+};
 
 //////////////////////////////////////////////////////////
 // ANIMACION
@@ -401,8 +479,7 @@ window.addEventListener(
     ()=>{
 
         camera.aspect =
-            window.innerWidth /
-            window.innerHeight;
+            window.innerWidth/window.innerHeight;
 
         camera.updateProjectionMatrix();
 
