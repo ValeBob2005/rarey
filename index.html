@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+      position="0 15 0"
+      depth="0.5"
+      height="2"
+      width="0.5"
+      color="#EB7878">
+    </a-box>
+
+    <a-box
+      position="0 15 0"
+      depth="0.5"
+      height="0.5"
+      width="2"
+      color="#EB7878">
+    </a-box>
+
+    <!-- CAMPO VECTORIAL -->
+
+    <a-entity id="vectorField"></a-entity>
+
+  </a-marker>
+
+  <a-entity camera></a-entity>
+
+</a-scene>
+
+<script>
+
+const vectorField = document.querySelector('#vectorField');
+
+function createArrow(x,y,z,u,v,w){
+
+    const length = 0.8;
+
+    const arrow = document.createElement('a-cylinder');
+
+    arrow.setAttribute('position', `${x} ${y} ${z}`);
+
+    arrow.setAttribute('radius', 0.03);
+
+    arrow.setAttribute('height', length);
+
+    arrow.setAttribute('color', '#CC0000');
+
+    const angleY = Math.atan2(u,w) * 180/Math.PI;
+
+    arrow.setAttribute('rotation', `90 ${angleY} 0`);
+
+    vectorField.appendChild(arrow);
+
+}
+
+for(let x=-3;x<=3;x+=1.5){
+  for(let y=-3;y<=3;y+=1.5){
+    for(let z=0;z<=10;z+=2){
+
+      const u = x + 2*y;
+      const v = y*z + 1;
+      const w = x - y*y;
+
+      const mag = Math.sqrt(u*u+v*v+w*w);
+
+      createArrow(
+        x,
+        z/2,
+        y,
+        u/mag,
+        v/mag,
+        w/mag
+      );
+
+    }
+  }
+}
+
+</script>
+
+</body>
+</html>
