@@ -3,14 +3,14 @@
 
 <head>
 <meta charset="UTF-8">
-<title>Rey Vectorial</title>
+<title>Rey Matemático + Campo Vectorial</title>
 
 <style>
 
 body{
     margin:0;
     overflow:hidden;
-    background:black;
+    background:#050505;
 }
 
 canvas{
@@ -28,17 +28,17 @@ canvas{
 
 <script>
 
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 // ESCENA
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
 const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0x111111);
+scene.background = new THREE.Color(0x050505);
 
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 // CAMARA
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
 const camera = new THREE.PerspectiveCamera(
     60,
@@ -49,9 +49,9 @@ const camera = new THREE.PerspectiveCamera(
 
 camera.position.set(25,20,25);
 
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 // RENDER
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
 const renderer = new THREE.WebGLRenderer({
     antialias:true
@@ -66,9 +66,9 @@ document.body.appendChild(
     renderer.domElement
 );
 
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 // CONTROLES
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
 const controls = new THREE.OrbitControls(
     camera,
@@ -77,9 +77,9 @@ const controls = new THREE.OrbitControls(
 
 controls.enableDamping = true;
 
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 // LUCES
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
 const ambient = new THREE.AmbientLight(
     0xffffff,
@@ -97,192 +97,384 @@ light.position.set(20,30,20);
 
 scene.add(light);
 
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 // MATERIALES
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
-const blueMat = new THREE.MeshPhongMaterial({
+const matBase = new THREE.MeshPhongMaterial({
     color:0x5A96DC,
     transparent:true,
-    opacity:0.5
+    opacity:0.45,
+    side:THREE.DoubleSide
 });
 
-const silverMat = new THREE.MeshPhongMaterial({
+const matBody = new THREE.MeshPhongMaterial({
     color:0xA0AAB4,
     transparent:true,
-    opacity:0.6
+    opacity:0.55,
+    side:THREE.DoubleSide
 });
 
-const goldMat = new THREE.MeshPhongMaterial({
+const matCollar = new THREE.MeshPhongMaterial({
+    color:0xFFEBAA,
+    transparent:true,
+    opacity:0.55,
+    side:THREE.DoubleSide
+});
+
+const matCrown = new THREE.MeshPhongMaterial({
     color:0xFFDC78,
     transparent:true,
-    opacity:0.6
+    opacity:0.45,
+    side:THREE.DoubleSide
 });
 
-const redMat = new THREE.MeshPhongMaterial({
+const matCross = new THREE.MeshPhongMaterial({
     color:0xEB7878
 });
 
-/////////////////////////////////////////////////////
-// BASE
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
+// FUNCION SUPERFICIE PARAMETRICA
+//////////////////////////////////////////////////////////
 
-const base = new THREE.Mesh(
+function createSurface(
+    uSegments,
+    vSegments,
+    func,
+    material
+){
 
-    new THREE.CylinderGeometry(
-        5,
-        5,
-        3,
-        64
-    ),
+    const geometry = new THREE.BufferGeometry();
 
-    blueMat
+    const vertices = [];
+    const indices = [];
+
+    for(let i=0;i<=uSegments;i++){
+
+        const u = i/uSegments;
+
+        for(let j=0;j<=vSegments;j++){
+
+            const v = j/vSegments;
+
+            const p = func(u,v);
+
+            vertices.push(
+                p.x,
+                p.y,
+                p.z
+            );
+
+        }
+
+    }
+
+    for(let i=0;i<uSegments;i++){
+
+        for(let j=0;j<vSegments;j++){
+
+            const a =
+                i*(vSegments+1)+j;
+
+            const b =
+                a+vSegments+1;
+
+            const c =
+                b+1;
+
+            const d =
+                a+1;
+
+            indices.push(a,b,d);
+            indices.push(b,c,d);
+
+        }
+
+    }
+
+    geometry.setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(
+            vertices,
+            3
+        )
+    );
+
+    geometry.setIndex(indices);
+
+    geometry.computeVertexNormals();
+
+    return new THREE.Mesh(
+        geometry,
+        material
+    );
+
+}
+
+//////////////////////////////////////////////////////////
+// BASE CILINDRO
+//////////////////////////////////////////////////////////
+
+const base = createSurface(
+
+    100,
+    100,
+
+    (u,v)=>{
+
+        const theta = 2*Math.PI*u;
+
+        const z = 3*v;
+
+        const r = 5;
+
+        return {
+
+            x:r*Math.cos(theta),
+            y:z,
+            z:r*Math.sin(theta)
+
+        };
+
+    },
+
+    matBase
 
 );
-
-base.position.y = 1.5;
 
 scene.add(base);
 
-/////////////////////////////////////////////////////
-// CUERPO
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
+// HIPERBOLOIDE
+//////////////////////////////////////////////////////////
 
-const body = new THREE.Mesh(
+const body = createSurface(
 
-    new THREE.CylinderGeometry(
-        2.8,
-        1.4,
-        8,
-        64
-    ),
+    120,
+    120,
 
-    silverMat
+    (u,v)=>{
+
+        const theta = 2*Math.PI*u;
+
+        const zMin = 3.02;
+        const zMax = 11.4;
+
+        const z = zMin + (zMax-zMin)*v;
+
+        const a = 1.5;
+        const c = 5;
+
+        const z0 = (zMin+zMax)/2;
+
+        const r = a*Math.sqrt(
+            1 + ((z-z0)*(z-z0))/(c*c)
+        );
+
+        return {
+
+            x:r*Math.cos(theta),
+            y:z,
+            z:r*Math.sin(theta)
+
+        };
+
+    },
+
+    matBody
 
 );
-
-body.position.y = 7;
 
 scene.add(body);
 
-/////////////////////////////////////////////////////
-// COLLAR
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
+// ELIPSOIDE
+//////////////////////////////////////////////////////////
 
-const collar = new THREE.Mesh(
+const collar = createSurface(
 
-    new THREE.SphereGeometry(
-        2.2,
-        64,
-        64
-    ),
+    100,
+    100,
 
-    goldMat
+    (u,v)=>{
+
+        const theta = 2*Math.PI*u;
+
+        const zMin = 11.4;
+        const zMax = 11.8;
+
+        const z = zMin + (zMax-zMin)*v;
+
+        const a = 2.2;
+        const c = 0.45;
+
+        const z0 = (zMin+zMax)/2;
+
+        const inside =
+            1 - ((z-z0)*(z-z0))/(c*c);
+
+        const r =
+            a*Math.sqrt(
+                Math.max(inside,0)
+            );
+
+        return {
+
+            x:r*Math.cos(theta),
+            y:z,
+            z:r*Math.sin(theta)
+
+        };
+
+    },
+
+    matCollar
 
 );
-
-collar.scale.y = 0.25;
-
-collar.position.y = 11.3;
 
 scene.add(collar);
 
-/////////////////////////////////////////////////////
-// CORONA
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
+// PARABOLOIDE
+//////////////////////////////////////////////////////////
 
-const crown = new THREE.Mesh(
+const crown = createSurface(
 
-    new THREE.ConeGeometry(
-        3,
-        6,
-        64
-    ),
+    120,
+    120,
 
-    goldMat
+    (u,v)=>{
+
+        const theta = 2*Math.PI*u;
+
+        const alpha = 2.6;
+
+        const rho = v;
+
+        const rmax = Math.sqrt(5.2);
+
+        const r = alpha*rmax*rho;
+
+        const x = r*Math.cos(theta);
+
+        const z = r*Math.sin(theta);
+
+        const y =
+            11.8 +
+            (x*x + z*z)/(alpha*alpha);
+
+        return {
+
+            x:x,
+            y:y,
+            z:z
+
+        };
+
+    },
+
+    matCrown
 
 );
 
-crown.position.y = 15;
-
 scene.add(crown);
 
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 // CRUZ
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
 const crossV = new THREE.Mesh(
 
     new THREE.BoxGeometry(
-        0.6,
-        2.5,
-        0.6
+        0.8,
+        3,
+        0.8
     ),
 
-    redMat
+    matCross
 
 );
 
-crossV.position.y = 19;
+crossV.position.set(
+    0,
+    18.5,
+    0
+);
 
 scene.add(crossV);
 
 const crossH = new THREE.Mesh(
 
     new THREE.BoxGeometry(
-        2,
-        0.6,
-        0.6
+        3,
+        0.8,
+        0.8
     ),
 
-    redMat
+    matCross
 
 );
 
-crossH.position.y = 19;
+crossH.position.set(
+    0,
+    18.5,
+    0
+);
 
 scene.add(crossH);
 
-/////////////////////////////////////////////////////
-// CAMPO VECTORIAL
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
+// CAMPO VECTORIAL EXACTO
+//////////////////////////////////////////////////////////
 
-function addVector(x,y,z,u,v,w){
+function addVector(
+    x,
+    y,
+    z,
+    u,
+    v,
+    w
+){
 
-    const dir = new THREE.Vector3(
-        u,
-        v,
-        w
-    );
+    const direction =
+        new THREE.Vector3(
+            u,
+            v,
+            w
+        );
 
-    dir.normalize();
+    direction.normalize();
 
-    const origin = new THREE.Vector3(
-        x,
-        y,
-        z
-    );
+    const origin =
+        new THREE.Vector3(
+            x,
+            y,
+            z
+        );
 
-    const arrow = new THREE.ArrowHelper(
-        dir,
-        origin,
-        1.5,
-        0xff0000,
-        0.5,
-        0.3
-    );
+    const length = 1.2;
+
+    const arrow =
+        new THREE.ArrowHelper(
+            direction,
+            origin,
+            length,
+            0xff0000,
+            0.4,
+            0.25
+        );
 
     scene.add(arrow);
 
 }
 
-/////////////////////////////////////////////////////
-// GENERAR CAMPO VECTORIAL
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
+// GENERAR CAMPO
+//////////////////////////////////////////////////////////
 
-for(let x=-8;x<=8;x+=3){
+for(let x=-6;x<=6;x+=3){
 
-    for(let y=-8;y<=8;y+=3){
+    for(let y=-6;y<=6;y+=3){
 
         for(let z=0;z<=20;z+=4){
 
@@ -293,7 +485,9 @@ for(let x=-8;x<=8;x+=3){
             let w = x - y*y;
 
             let mag = Math.sqrt(
-                u*u + v*v + w*w
+                u*u +
+                v*v +
+                w*w
             );
 
             u /= mag;
@@ -315,9 +509,9 @@ for(let x=-8;x<=8;x+=3){
 
 }
 
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 // GRID
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
 const grid = new THREE.GridHelper(
     40,
@@ -326,9 +520,9 @@ const grid = new THREE.GridHelper(
 
 scene.add(grid);
 
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 // EJES
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
 const axes = new THREE.AxesHelper(
     10
@@ -336,9 +530,9 @@ const axes = new THREE.AxesHelper(
 
 scene.add(axes);
 
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 // ANIMACION
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
 function animate(){
 
@@ -357,9 +551,9 @@ function animate(){
 
 animate();
 
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 // RESIZE
-/////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////
 
 window.addEventListener(
     'resize',
