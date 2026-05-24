@@ -3,14 +3,14 @@
 
 <head>
 <meta charset="UTF-8">
-<title>Rey Matemático + Campo Vectorial</title>
+
+<title>Rey Matemático AR</title>
 
 <style>
 
 body{
     margin:0;
     overflow:hidden;
-    background:#050505;
 }
 
 canvas{
@@ -22,11 +22,15 @@ canvas{
 
 <body>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script type="module">
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+//////////////////////////////////////////////////////////
+// IMPORTS
+//////////////////////////////////////////////////////////
 
-<script>
+import * as THREE from 'https://unpkg.com/three@0.128.0/build/three.module.js';
+
+import { ARButton } from 'https://unpkg.com/three@0.128.0/examples/jsm/webxr/ARButton.js';
 
 //////////////////////////////////////////////////////////
 // ESCENA
@@ -34,27 +38,24 @@ canvas{
 
 const scene = new THREE.Scene();
 
-scene.background = new THREE.Color(0x050505);
-
 //////////////////////////////////////////////////////////
 // CAMARA
 //////////////////////////////////////////////////////////
 
 const camera = new THREE.PerspectiveCamera(
-    60,
+    70,
     window.innerWidth/window.innerHeight,
-    0.1,
-    1000
+    0.01,
+    100
 );
-
-camera.position.set(25,20,25);
 
 //////////////////////////////////////////////////////////
 // RENDER
 //////////////////////////////////////////////////////////
 
 const renderer = new THREE.WebGLRenderer({
-    antialias:true
+    antialias:true,
+    alpha:true
 });
 
 renderer.setSize(
@@ -62,20 +63,26 @@ renderer.setSize(
     window.innerHeight
 );
 
+renderer.xr.enabled = true;
+
 document.body.appendChild(
     renderer.domElement
 );
 
 //////////////////////////////////////////////////////////
-// CONTROLES
+// BOTON AR
 //////////////////////////////////////////////////////////
 
-const controls = new THREE.OrbitControls(
-    camera,
-    renderer.domElement
-);
+document.body.appendChild(
 
-controls.enableDamping = true;
+    ARButton.createButton(
+        renderer,
+        {
+            requiredFeatures:['hit-test']
+        }
+    )
+
+);
 
 //////////////////////////////////////////////////////////
 // LUCES
@@ -83,19 +90,27 @@ controls.enableDamping = true;
 
 const ambient = new THREE.AmbientLight(
     0xffffff,
-    0.8
+    1
 );
 
 scene.add(ambient);
 
-const light = new THREE.DirectionalLight(
+const dir = new THREE.DirectionalLight(
     0xffffff,
     1.5
 );
 
-light.position.set(20,30,20);
+dir.position.set(10,20,10);
 
-scene.add(light);
+scene.add(dir);
+
+//////////////////////////////////////////////////////////
+// GRUPO PRINCIPAL
+//////////////////////////////////////////////////////////
+
+const kingGroup = new THREE.Group();
+
+scene.add(kingGroup);
 
 //////////////////////////////////////////////////////////
 // MATERIALES
@@ -144,7 +159,8 @@ function createSurface(
     material
 ){
 
-    const geometry = new THREE.BufferGeometry();
+    const geometry =
+        new THREE.BufferGeometry();
 
     const vertices = [];
     const indices = [];
@@ -212,26 +228,26 @@ function createSurface(
 }
 
 //////////////////////////////////////////////////////////
-// BASE CILINDRO
+// BASE
 //////////////////////////////////////////////////////////
 
 const base = createSurface(
 
-    100,
-    100,
+    80,
+    80,
 
     (u,v)=>{
 
         const theta = 2*Math.PI*u;
 
-        const z = 3*v;
+        const y = 0 + 3*v;
 
         const r = 5;
 
         return {
 
             x:r*Math.cos(theta),
-            y:z,
+            y:y,
             z:r*Math.sin(theta)
 
         };
@@ -242,7 +258,7 @@ const base = createSurface(
 
 );
 
-scene.add(base);
+kingGroup.add(base);
 
 //////////////////////////////////////////////////////////
 // HIPERBOLOIDE
@@ -250,31 +266,34 @@ scene.add(base);
 
 const body = createSurface(
 
-    120,
-    120,
+    100,
+    100,
 
     (u,v)=>{
 
         const theta = 2*Math.PI*u;
 
-        const zMin = 3.02;
-        const zMax = 11.4;
+        const yMin = 3;
+        const yMax = 11.4;
 
-        const z = zMin + (zMax-zMin)*v;
+        const y =
+            yMin + (yMax-yMin)*v;
 
         const a = 1.5;
         const c = 5;
 
-        const z0 = (zMin+zMax)/2;
+        const y0 =
+            (yMin+yMax)/2;
 
-        const r = a*Math.sqrt(
-            1 + ((z-z0)*(z-z0))/(c*c)
-        );
+        const r =
+            a*Math.sqrt(
+                1 + ((y-y0)*(y-y0))/(c*c)
+            );
 
         return {
 
             x:r*Math.cos(theta),
-            y:z,
+            y:y,
             z:r*Math.sin(theta)
 
         };
@@ -285,33 +304,35 @@ const body = createSurface(
 
 );
 
-scene.add(body);
+kingGroup.add(body);
 
 //////////////////////////////////////////////////////////
-// ELIPSOIDE
+// COLLAR
 //////////////////////////////////////////////////////////
 
 const collar = createSurface(
 
-    100,
-    100,
+    80,
+    80,
 
     (u,v)=>{
 
         const theta = 2*Math.PI*u;
 
-        const zMin = 11.4;
-        const zMax = 11.8;
+        const yMin = 11.4;
+        const yMax = 11.8;
 
-        const z = zMin + (zMax-zMin)*v;
+        const y =
+            yMin + (yMax-yMin)*v;
 
         const a = 2.2;
         const c = 0.45;
 
-        const z0 = (zMin+zMax)/2;
+        const y0 =
+            (yMin+yMax)/2;
 
         const inside =
-            1 - ((z-z0)*(z-z0))/(c*c);
+            1 - ((y-y0)*(y-y0))/(c*c);
 
         const r =
             a*Math.sqrt(
@@ -321,7 +342,7 @@ const collar = createSurface(
         return {
 
             x:r*Math.cos(theta),
-            y:z,
+            y:y,
             z:r*Math.sin(theta)
 
         };
@@ -332,7 +353,7 @@ const collar = createSurface(
 
 );
 
-scene.add(collar);
+kingGroup.add(collar);
 
 //////////////////////////////////////////////////////////
 // PARABOLOIDE
@@ -340,8 +361,8 @@ scene.add(collar);
 
 const crown = createSurface(
 
-    120,
-    120,
+    100,
+    100,
 
     (u,v)=>{
 
@@ -353,11 +374,14 @@ const crown = createSurface(
 
         const rmax = Math.sqrt(5.2);
 
-        const r = alpha*rmax*rho;
+        const r =
+            alpha*rmax*rho;
 
-        const x = r*Math.cos(theta);
+        const x =
+            r*Math.cos(theta);
 
-        const z = r*Math.sin(theta);
+        const z =
+            r*Math.sin(theta);
 
         const y =
             11.8 +
@@ -377,7 +401,7 @@ const crown = createSurface(
 
 );
 
-scene.add(crown);
+kingGroup.add(crown);
 
 //////////////////////////////////////////////////////////
 // CRUZ
@@ -401,7 +425,7 @@ crossV.position.set(
     0
 );
 
-scene.add(crossV);
+kingGroup.add(crossV);
 
 const crossH = new THREE.Mesh(
 
@@ -421,7 +445,7 @@ crossH.position.set(
     0
 );
 
-scene.add(crossH);
+kingGroup.add(crossH);
 
 //////////////////////////////////////////////////////////
 // CAMPO VECTORIAL EXACTO
@@ -452,19 +476,17 @@ function addVector(
             z
         );
 
-    const length = 1.2;
-
     const arrow =
         new THREE.ArrowHelper(
             direction,
             origin,
-            length,
+            1.2,
             0xff0000,
             0.4,
-            0.25
+            0.2
         );
 
-    scene.add(arrow);
+    kingGroup.add(arrow);
 
 }
 
@@ -495,9 +517,9 @@ for(let x=-6;x<=6;x+=3){
             w /= mag;
 
             addVector(
-                x,
-                z,
-                y,
+                x*0.2,
+                z*0.2,
+                y*0.2,
                 u,
                 v,
                 w
@@ -510,46 +532,33 @@ for(let x=-6;x<=6;x+=3){
 }
 
 //////////////////////////////////////////////////////////
-// GRID
+// ESCALA GENERAL
 //////////////////////////////////////////////////////////
 
-const grid = new THREE.GridHelper(
-    40,
-    40
+kingGroup.scale.set(
+    0.05,
+    0.05,
+    0.05
 );
 
-scene.add(grid);
-
-//////////////////////////////////////////////////////////
-// EJES
-//////////////////////////////////////////////////////////
-
-const axes = new THREE.AxesHelper(
-    10
+kingGroup.position.set(
+    0,
+    -0.5,
+    -2
 );
 
-scene.add(axes);
-
 //////////////////////////////////////////////////////////
-// ANIMACION
+// RENDER LOOP
 //////////////////////////////////////////////////////////
 
-function animate(){
-
-    requestAnimationFrame(
-        animate
-    );
-
-    controls.update();
+renderer.setAnimationLoop(()=>{
 
     renderer.render(
         scene,
         camera
     );
 
-}
-
-animate();
+});
 
 //////////////////////////////////////////////////////////
 // RESIZE
